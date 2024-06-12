@@ -5,9 +5,10 @@ import os
 import torch
 import torch.nn.functional as F
 import pandas as pd
-from envs import OfflineEnv
-from recommender import DRRAgent
-from loader import load_dataset, load_dataset_session
+
+from src.envs import OfflineEnv
+from src.recommender import DRRAgent
+from src.loader import load_dataset, load_dataset_session
 import tensorflow as tf
 
 """

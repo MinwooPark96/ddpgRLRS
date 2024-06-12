@@ -6,9 +6,9 @@ import itertools
 import matplotlib.pyplot as plt
 import time
 
-from envs import OfflineEnv
-from recommender import DRRAgent
-from loader import load_dataset, load_dataset_session
+from src.envs import OfflineEnv
+from src.recommender import DRRAgent
+from src.loader import load_dataset, load_dataset_session
 import os
 
 """

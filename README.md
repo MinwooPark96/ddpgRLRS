@@ -1,5 +1,4 @@
 # Deep Reinforcement Learning based Recommender System in Torch
-
 The implemetation of Deep Reinforcement Learning based Recommender System from the paper [Deep Reinforcement Learning based Recommendation with Explicit User-Item Interactions Modeling](https://arxiv.org/abs/1810.12027) by Liu et al. Build recommender system with [DDPG](https://arxiv.org/abs/1509.02971) algorithm. Add state representation module to produce trainable state for RL algorithm from data.
 
 # Dataset
@@ -10,21 +9,35 @@ unzip ./ml-1m.zip
 ```
 
 # Embedding 
-The Embedding vector for video, audio and text is used. 
+We incorporate multimodal movie features, utilizing audio, text, and video data, to create a more comprehensive and context-aware recommendation model. Processed by modality-specific encoders including ViT (visual), AST (audio), and BERT (text).
 
-# Environment
+- Early Fusion : One FC layer applied to pooled multi-modal features.
+- Late Fusion : Modality-specific FC layers applied before pooling.
+- Pooling : concatenation / element-wise mean
+
+# Environment Setting
 ```
-conda create -n env_name python=3.8.15
+conda create -n env_name python=3.11.2 
 
 conda activate env_name
 
-# tensorflow
-conda install -c conda-forge tensorflow=2.6.0=cuda112py38hbe5352d_2 pandas=1.4.4=py38h47df419_0 scikit-learn=0.23.2=py38h5d63f67_3 matplotlib=3.3.3=py38h578d9bd_0 wandb=0.13.5=pyhd8ed1ab_0 tensorflow-gpu
-
-# torch
-pip install torch==2.0.1+cu117 torchvision==0.15.2+cu117 torchaudio==2.0.2 --index-url https://download.pytorch.org/whl/cu117
+conda install tensorflow==2.12.0
+pip install torch==2.0.1+cu117 --index-url https://download.pytorch.org/whl/cu117
+pip install -r requirements.txt
 ```
 
-# reference
+# run
+1. run DRR with multi modal feature (dimension of embedding = 128(64*2))
+    ```
+    bash scripts/train_modality.sh
+    bash scripts/eval_modality.sh
+    ```
+2. run DRR with single ID feature (dimension of embedding = 100)
+    ```
+    bash scripts/train.sh
+    bash scripts/eval.sh
+    ```
 
+
+# reference
 https://github.com/backgom2357/Recommender_system_via_deep_RL

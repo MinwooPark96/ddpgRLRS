@@ -10,7 +10,7 @@ import wandb
 from replay_buffer import PriorityExperienceReplay
 from actor import Actor
 from critic import Critic
-from embedding import UserMovieEmbedding, UserMovieMultiModalEmbedding
+from embedding import UserMovieEmbedding, UserMovieMultiModalEmbedding, ConcatedEmbedding
 from state_representation import DRRAveStateRepresentation
 import time
 
@@ -95,27 +95,35 @@ class DRRAgent:
         
         else :
             modality = tuple(args.modality.lower().split(','))
-            self.embedding_network = UserMovieMultiModalEmbedding(users_num,
+            id_embedding_network = UserMovieMultiModalEmbedding(users_num,
                                                                   items_num,
-                                                                  self.embedding_dim,
+                                                                  self.embedding_dim//2,
+                                                                  None,
+                                                                  None,
+                                                                  None)
+            
+            id_embedding_network([np.array([0, 1]), np.array([0, 1])])
+            id_embedding_network.load_weights(os.path.join(ROOT_DIR, 'save_weights', 'u_m_model_ID.h5'))
+            
+            mm_embedding_network = UserMovieMultiModalEmbedding(users_num,
+                                                                  items_num,
+                                                                  self.embedding_dim//2,
                                                                   modality,
                                                                   args.fusion,
                                                                   args.aggregation)
             
-            self.embedding_network([np.array([0, 1]), np.array([0, 1])])
-            
+            mm_embedding_network([np.array([0, 1]), np.array([0, 1])])
             mod_name = ''.join([mod[0] for mod in modality]).upper()
             weights_name = f'{mod_name}_{args.fusion}_{args.aggregation}'
             
-            embedding_save_file_dir = os.path.join(ROOT_DIR, 'save_weights', f'u_m_model_{weights_name}.h5')
-            self.embedding_network.load_weights(embedding_save_file_dir)
+            mm_embedding_network.load_weights(os.path.join(ROOT_DIR, 'save_weights', f'u_m_model_{weights_name}.h5'))
+            
+            self.embedding_network = ConcatedEmbedding(id_embedding_network, mm_embedding_network)
+            
             print('[Embedding] UserMovieMultiModalEmbedding is loaded')
             
         time.sleep(2)
         
-        assert os.path.exists(
-            embedding_save_file_dir), f"embedding save file directory: '{embedding_save_file_dir}' is wrong."
-
         self.srm_ave = DRRAveStateRepresentation(embedding_dim = self.embedding_dim, state_size = self.state_size)
         self.srm_ave.eval()
         
@@ -126,7 +134,7 @@ class DRRAgent:
 
         # ε-greedy exploration hyperparameter
         self.epsilon = epsilon
-        self.epsilon_decay = (self.epsilon - 0.1) / args.max_episode_num
+        self.epsilon_decay = (self.epsilon - 0.1) /500000
         self.std = std
 
         self.is_eval = is_eval
@@ -166,15 +174,16 @@ class DRRAgent:
         
         if not self.args.modality:
             items_ebs = self.embedding_network.m_embedding(torch.tensor(items_ids, dtype=torch.long)).to(self.device) 
+        
         else :
              _, items_ebs = self.embedding_network.get_embedding([np.zeros_like(items_ids), np.array(items_ids)])
              items_ebs = torch.from_numpy(items_ebs.numpy()).to(self.device)
         
-        action = torch.transpose(action, 0, 1)
+        action = torch.transpose(action, 0, 1).to(self.device)
         
         if top_k:
             item_indice = torch.argsort(torch.matmul(items_ebs, action).squeeze())[-top_k:]
-            return items_ids[item_indice]
+            return items_ids[item_indice.cpu().numpy()]
         
         else:
             item_idx = torch.argmax(torch.matmul(items_ebs, action)).item()
@@ -238,7 +247,6 @@ class DRRAgent:
                     user_eb, items_eb = self.embedding_network.get_embedding([tf_user_id, tf_items_ids])
                     user_eb, items_eb = tf.reshape(user_eb, (1,self.embedding_dim)).numpy(), items_eb.numpy()
                 
-
                 state = self.srm_ave([
                     torch.tensor(user_eb, dtype=torch.float32), 
                     torch.tensor(items_eb, dtype=torch.float32).unsqueeze(0)

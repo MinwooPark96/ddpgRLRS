@@ -137,5 +137,19 @@ class UserMovieMultiModalEmbedding(tf.keras.Model):
         m_u = self.m_u_merge([memb, uemb])
         return self.m_u_fc(m_u)
 
+class ConcatedEmbedding:
+    def __init__(self, id_embedding_network, mm_embedding_network):
+        self.id_embedding_network = id_embedding_network
+        self.mm_embedding_network = mm_embedding_network
+    def get_embedding(self, x):
+        id_uemb, id_memb = self.id_embedding_network.get_embedding(x)
+        if self.mm_embedding_network:
+            mm_uemb, mm_memb = self.mm_embedding_network.get_embedding(x)
+        else:
+            mm_uemb = tf.zeros_like(id_uemb)
+            mm_memb = tf.zeros_like(id_memb)
+        uemb, memb = tf.concat([id_uemb, mm_uemb], axis=0), tf.concat([id_memb, mm_memb], axis=1)
+        return uemb, memb
+
 if __name__ == "__main__":
     pass

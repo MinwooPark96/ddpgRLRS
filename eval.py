@@ -41,7 +41,7 @@ def evaluate(recommender, env, args, check_movies: bool=False, top_k: int=1, len
             tf_items_ids = tf.convert_to_tensor(items_ids, dtype=tf.int32)
             tf_user_id = tf.convert_to_tensor(user_id, dtype=tf.int32)
             user_eb, items_eb = recommender.embedding_network.get_embedding([tf_user_id, tf_items_ids])
-            user_eb, items_eb = tf.reshape(user_eb, (1,args.embedding_dim)).numpy(), items_eb.numpy()
+            user_eb, items_eb = tf.reshape(user_eb, (1,args.dim_emb)).numpy(), items_eb.numpy()
             
         # state = recommender.srm_ave(user_eb.unsqueeze(0), items_eb.unsqueeze(0))
         state = recommender.srm_ave([
@@ -94,7 +94,7 @@ def evaluater(args):
 
     sum_precision, sum_ndcg = 0, 0
 
-    end_evaluation = 200
+    end_evaluation = 50
 
     temp_env = OfflineEnv(eval_users_dict, users_history_lens, movies_id_to_movies, args.state_size)
     avaiable_users = temp_env.available_users

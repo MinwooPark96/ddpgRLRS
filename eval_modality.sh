@@ -1,12 +1,12 @@
 gpu=-1
-save_dir=./save_model/trail-2024-06-11-14-44-03
+save_dir=./save_model/train_video,audio,text_early_concat_session
 
 CUDA_VISIBLE_DEVICES=$gpu python run.py \
     --gpu $gpu \
     --mode 'eval' \
     --use_wandb 0 \
-    --dim_emb 64 \
-    --top_k 5 \
+    --dim_emb 128 \
+    --top_k 10 \
     --state_size 10 \
     --dim_actor 128 \
     --dim_critic 128 \
@@ -22,5 +22,5 @@ CUDA_VISIBLE_DEVICES=$gpu python run.py \
     --modality 'video,audio,text'\
     --fusion 'late' \
     --aggregation 'concat' \
-    --saved_actor $save_dir/actor_5000_fixed.pth \
-    --saved_critic $save_dir/critic_5000_fixed.pth
+    --saved_actor $save_dir/actor_6000_fixed.pth \
+    --saved_critic $save_dir/critic_6000_fixed.pth

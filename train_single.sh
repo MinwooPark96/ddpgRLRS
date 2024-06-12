@@ -1,4 +1,4 @@
-gpu=-1
+gpu=0
 
 CUDA_VISIBLE_DEVICES=$gpu python run.py \
     --gpu $gpu \
